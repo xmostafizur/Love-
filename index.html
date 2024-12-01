@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch the Falling Logos</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #fefbd8;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .game-container {
+      position: relative;
+      width: 400px;
+      height: 600px;
+      border: 2px solid #333;
+      background-color: #88cc88;
+      display: none;
+    }
+
+    #bucket {
+      position: absolute;
+      bottom: 10px;
+      left: 175px;
+      width: 60px;
+      height: 40px;
+      background: url('https://i.postimg.cc/R0KWTm5H/8421374.png') no-repeat center center;
+      background-size: contain;
+    }
+
+    .logo {
+      position: absolute;
+      top: 0;
+      width: 50px;
+      height: 50px;
+      background-size: contain;
+    }
+
+    #score, #lives {
+      margin: 10px;
+      font-size: 20px;
+      color: #333;
+    }
+
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .game-over button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #ff5733;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .game-over button:hover {
+      background-color: #ff3333;
+    }
+
+    #unlimitedLivesButton {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 10px 20px;
+      background-color: #33cc33;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    #unlimitedLivesButton:hover {
+      background-color: #28a428;
+    }
+
+    #playButton {
+      padding: 20px 40px;
+      font-size: 24px;
+      background-color: #28a428;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #playButton:hover {
+      background-color: #1f7a1f;
+    }
+
+    #countdown {
+      font-size: 50px;
+      font-weight: bold;
+      color: #ff0000;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="countdown">3</div>
+  <button id="playButton">Play</button>
+  <div class="game-container">
+    <div id="bucket"></div>
+    <div id="score">Score: 0</div>
+    <div id="lives">Lives: 3</div>
+  </div>
+  <button id="unlimitedLivesButton">Unlimited Lives</button>
+
+  <script>
+    const gameContainer = document.querySelector('.game-container');
+    const bucket = document.getElementById('bucket');
+    const scoreDisplay = document.getElementById('score');
+    const livesDisplay = document.getElementById('lives');
+    const unlimitedLivesButton = document.getElementById('unlimitedLivesButton');
+    const playButton = document.getElementById('playButton');
+    const countdownDisplay = document.getElementById('countdown');
+    let score = 0;
+    let lives = 3;
+    let gameOver = false;
+    let unlimitedLives = false;
+    let gameStarted = false;
+
+    const logos = [
+      'https://i.postimg.cc/y8fMr3Bq/Picsart-24-12-01-19-27-43-112.png',
+      'https://i.postimg.cc/Hsm1JC3N/Picsart-24-12-01-19-26-59-054.png',
+      'https://i.postimg.cc/4y6C884w/Picsart-24-12-01-19-30-18-552.png',
+      'https://i.postimg.cc/bv5jdDF0/Picsart-24-12-01-19-30-45-385.png',
+      'https://i.postimg.cc/rw8THLr4/Picsart-24-12-01-19-31-12-841.png',
+      'https://i.postimg.cc/3wKJN5Sr/Picsart-24-10-15-12-39-04-778.png'
+    ];
+
+    // Function to update bucket image based on score
+    function updateBucket() {
+      if (score >= 15) {
+        bucket.style.backgroundImage = "url('https://i.postimg.cc/DzkZ0NJy/8421359.png')";
+      } else if (score >= 10) {
+        bucket.style.backgroundImage = "url('https://i.postimg.cc/K8gjZbYH/8421378.png')";
+      } else {
+        bucket.style.backgroundImage = "url('https://i.postimg.cc/R0KWTm5H/8421374.png')";
+      }
+    }
+
+    // Start game after countdown
+    function startGame() {
+      if (gameStarted) return;
+      gameStarted = true;
+      countdownDisplay.style.display = 'none';
+      playButton.style.display = 'none';
+      gameContainer.style.display = 'block';
+      setInterval(createLogo, 1000);
+    }
+
+    // Countdown function
+    function countdown() {
+      let count = 3;
+      countdownDisplay.style.display = 'block';
+      const countdownInterval = setInterval(() => {
+        countdownDisplay.textContent = count;
+        count--;
+        if (count < 0) {
+          clearInterval(countdownInterval);
+          startGame();
+        }
+      }, 1000);
+    }
+
+    // Move bucket using touch
+    gameContainer.addEventListener('touchmove', (e) => {
+      const touchX = e.touches[0].clientX - gameContainer.getBoundingClientRect().left;
+      const bucketX = Math.max(0, Math.min(touchX - bucket.offsetWidth / 2, gameContainer.offsetWidth - bucket.offsetWidth));
+      bucket.style.left = `${bucketX}px`;
+    });
+
+    // Move bucket using keyboard
+    document.addEventListener('keydown', (e) => {
+      const bucketX = parseInt(bucket.style.left || 0);
+      if (e.key === 'ArrowLeft') {
+        bucket.style.left = `${Math.max(bucketX - 10, 0)}px`;
+      } else if (e.key === 'ArrowRight') {
+        bucket.style.left = `${Math.min(bucketX + 10, 350)}px`;
+      }
+    });
+
+    // Function to end the game
+    function endGame() {
+      gameOver = true;
+      const gameOverDiv = document.createElement('div');
+      gameOverDiv.classList.add('game-over');
+      gameOverDiv.innerHTML = `
+        <p>Game Over!</p>
+        <p>Your Score: ${score}</p>
+        <button onclick="restartGame()">Restart</button>
+      `;
+      gameContainer.appendChild(gameOverDiv);
+    }
+
+    // Function to restart the game
+    function restartGame() {
+      window.location.reload();
+    }
+
+    // Function to create falling logo
+    function createLogo() {
+      if (gameOver) return;
+
+      const logo = document.createElement('div');
+      logo.classList.add('logo');
+      logo.style.backgroundImage = `url('${logos[Math.floor(Math.random() * logos.length)]}')`;
+      logo.style.left = `${Math.random() * 360}px`;
+      gameContainer.appendChild(logo);
+
+      let logoFall = 0;
+      const fallInterval = setInterval(() => {
+        if (gameOver) {
+          clearInterval(fallInterval);
+          return;
+        }
+
+        logoFall += 5;
+        logo.style.top = `${logoFall}px`;
+
+        // Check if logo reaches bottom
+        if (logoFall >= 570) {
+          clearInterval(fallInterval);
+          gameContainer.removeChild(logo);
+
+          // Deduct life if missed, unless unlimited lives is on
+          if (!unlimitedLives) {
+            lives--;
+            livesDisplay.textContent = `Lives: ${lives}`;
+          }
+          if (lives <= 0 && !unlimitedLives) {
+            endGame();
+          }
+        }
+
+        // Check if logo is caught
+        const bucketX = parseInt(bucket.style.left || 0);
+        const logoX = parseInt(logo.style.left || 0);
+        if (logoFall >= 520 && logoFall <= 570 && logoX >= bucketX && logoX <= bucketX + 60) {
+          score++;
+          scoreDisplay.textContent = `Score: ${score}`;
+          updateBucket();
+          clearInterval(fallInterval);
+          gameContainer.removeChild(logo);
+        }
+      }, 20);
+    }
+
+    // Unlimited lives button toggle
+    unlimitedLivesButton.addEventListener('click', () => {
+      unlimitedLives = !unlimitedLives;
+      unlimitedLivesButton.textContent = unlimitedLives ? 'Unlimited Lives: ON' : 'Unlimited Lives: OFF';
+    });
+
+    // Play button click event
+    playButton.addEventListener('click', countdown);
+
+  </script>
+</body>
+</html>
